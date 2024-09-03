@@ -1,9 +1,6 @@
 import streamlit as st
 import os
 import sys
-# 現在のスクリプトのディレクトリの親ディレクトリをsys.pathに追加
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from higuma_sidebar import admin_sidebar
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -20,4 +17,6 @@ st.subheader("プロジェクト紹介")
 for i, image_file in enumerate(image_files):
     st.image(image_file, use_column_width=True)
 
-admin_sidebar()
+with st.sidebar:
+    st.page_link("streamlit.py", label="ホーム", icon="🏠")
+    st.page_link("pages/information.py", label="ヘルプ", icon="❓")
