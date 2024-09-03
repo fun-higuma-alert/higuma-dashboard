@@ -6,6 +6,7 @@ import numpy as np
 
 # ページ設定
 st.set_page_config(layout="wide")
+
 import branca
 from dotenv import load_dotenv
 import os
