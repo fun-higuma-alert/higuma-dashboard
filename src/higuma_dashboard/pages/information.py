@@ -3,6 +3,7 @@ import os
 import sys
 # スクリプトのディレクトリの親ディレクトリを追加
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from higuma_sidebar import admin_sidebar
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
