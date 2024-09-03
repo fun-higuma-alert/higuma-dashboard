@@ -1,6 +1,6 @@
 import streamlit as st
 import os
-from higuma_dashboard.higuma_sidebar import admin_sidebar
+from higuma_sidebar import admin_sidebar
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
