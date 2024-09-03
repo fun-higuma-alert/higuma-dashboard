@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 import os
+from utils.higuma_sidebar import admin_sidebar
 
 # ページ設定
 st.set_page_config(layout="wide")
@@ -209,6 +210,4 @@ with col2:
     fig = create_color_bar()
     st.pyplot(fig)
 
-with st.sidebar:
-    st.page_link("streamlit.py", label="ホーム", icon="🏠")
-    st.page_link("pages/information.py", label="ヘルプ", icon="❓")
+admin_sidebar()
