@@ -3,7 +3,7 @@ import folium
 from streamlit_folium import folium_static
 import matplotlib.pyplot as plt
 import numpy as np
-from higuma_dashboard.higuma_sidebar import admin_sidebar
+from higuma_sidebar import admin_sidebar
 
 # ページ設定
 st.set_page_config(layout="wide")
