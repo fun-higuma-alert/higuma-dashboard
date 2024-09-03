@@ -3,6 +3,10 @@ import folium
 from streamlit_folium import folium_static
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
+import os
+# スクリプトのディレクトリをsys.pathに追加
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from higuma_sidebar import admin_sidebar
 
 # ページ設定
@@ -10,7 +14,6 @@ st.set_page_config(layout="wide")
 
 import branca
 from dotenv import load_dotenv
-import os
 
 load_dotenv()
 
