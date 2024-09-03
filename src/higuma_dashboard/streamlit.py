@@ -3,14 +3,15 @@ import folium
 from streamlit_folium import folium_static
 import matplotlib.pyplot as plt
 import numpy as np
+
+# ページ設定
+st.set_page_config(layout="wide")
+
 import branca
 from dotenv import load_dotenv
 import os
 
 load_dotenv()
-
-# ページ設定
-st.set_page_config(layout="wide")
 
 # Streamlitのタイトル
 st.title("Folium Map in Streamlit")
@@ -59,14 +60,16 @@ if 'initial_info' not in st.session_state:
 if 'location_info' not in st.session_state:
     st.session_state['location_info'] = st.session_state['initial_info']
 
-# ボタンを画面上部に配置
-col1, col2 = st.columns([1, 1])
-with col1:
-    if st.button("くま"):
+# ボタン間の空白を減らす
+cols = st.columns(8)  # より多くの列を作成
+
+with cols[0]:
+    if st.button("🐻 クマ", key="bear"):
         st.session_state['location_info'] = st.session_state['initial_info']
         st.experimental_rerun()
-with col2:
-    if st.button("しか"):
+
+with cols[1]:
+    if st.button("🫎 シカ", key="deer"):
         st.session_state['location_info'] = [
             {
                 "name": "函館駅",
@@ -86,6 +89,58 @@ with col2:
                     <b>はこだて未来大学の鹿</b><br>
                     <i>テスト:</i> 鹿の情報<br>
                     <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/shika.jpg" alt="はこだて未来大学" width="200">
+                """
+            }
+        ]
+        st.experimental_rerun()
+
+with cols[2]:
+    if st.button("🐦‍⬛ カラス", key="crow"):
+        st.session_state['location_info'] = [
+            {
+                "name": "函館駅",
+                "location": [41.768793, 140.728810],
+                "established": 1902,
+                "html": """
+                    <b>函館駅のカラス</b><br>
+                    <i>テスト:</i> カラスの情報<br>
+                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/crow.jpg" alt="函館駅" width="200">
+                """
+            },
+            {
+                "name": "はこだて未来大学",
+                "location": [41.841505, 140.766193],
+                "established": 2000,
+                "html": """
+                    <b>はこだて未来大学のカラス</b><br>
+                    <i>テスト:</i> カラスの情報<br>
+                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/crow.jpg" alt="はこだて未来大学" width="200">
+                """
+            }
+        ]
+        st.experimental_rerun()
+
+with cols[3]:
+    if st.button("🦊 キツネ", key="fox"):
+        st.session_state['location_info'] = [
+            {
+                "name": "函館駅",
+                "location": [41.768793, 140.728810],
+                "established": 1902,
+                "html": """
+                    <b>函館駅のキツネ</b><br>
+                    <i>テスト:</i> キツネの情報<br>
+                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/kitune.jpg" alt="函館駅" width="200">
+                """
+            },
+            {
+                "name": "はこだて未来大学",
+                "location": [41.841505, 140.766193],
+                "established": 2000,
+                "html": """
+                    <b>はこだて未来大学のキツネ</b><br>
+                    <i>テスト:</i> キツネの情報<br>
+                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/kitune.jpg" alt="はこだて未来大学" width="200">
                 """
             }
         ]
