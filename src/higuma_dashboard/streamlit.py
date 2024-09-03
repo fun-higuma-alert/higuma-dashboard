@@ -3,6 +3,7 @@ import folium
 from streamlit_folium import folium_static
 import matplotlib.pyplot as plt
 import numpy as np
+from higuma_dashboard.higuma_sidebar import admin_sidebar
 
 # ページ設定
 st.set_page_config(layout="wide")
@@ -207,3 +208,5 @@ with col1:
 with col2:
     fig = create_color_bar()
     st.pyplot(fig)
+
+admin_sidebar()

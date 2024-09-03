@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+from higuma_dashboard.higuma_sidebar import admin_sidebar
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -15,3 +16,5 @@ st.title("🐻ヒグマプロジェクト")
 st.subheader("プロジェクト紹介")
 for i, image_file in enumerate(image_files):
     st.image(image_file, use_column_width=True)
+
+admin_sidebar()
