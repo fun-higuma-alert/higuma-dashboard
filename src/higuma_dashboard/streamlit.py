@@ -6,6 +6,12 @@ import numpy as np
 import sys
 import os
 from utils.higuma_sidebar import admin_sidebar
+import boto3
+from io import BytesIO
+from PIL import Image
+import base64
+from dotenv import load_dotenv
+from datetime import timedelta
 
 # ページ設定
 st.set_page_config(layout="wide")
@@ -16,11 +22,103 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Streamlitのタイトル
-st.title("Folium Map in Streamlit")
+st.title("ヒグマダッシュボード")
 
 # 地図の中心座標とズームレベルを設定
 map_center = [41.768793, 140.728810]  # 函館の座標
 zoom_level = 10
+
+# AWSクレデンシャルの設定
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+bucket_name = 'higuma-detected-images'
+
+s3_client = boto3.client(
+    's3',
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key,
+)
+
+# 動物に応じてS3フォルダを参照する処理を共通化
+def update_location_info(animal, folder_path, alt_text):
+    latest_image_key = get_latest_image_from_s3(bucket_name, folder_path)
+    image_url = get_image_url_from_s3(bucket_name, latest_image_key) if latest_image_key else ""
+
+    # 画像の更新日時を取得し、9時間を追加
+    latest_image_info = list_images_in_s3_folder(bucket_name, folder_path)
+    latest_image_time = max(latest_image_info, key=lambda x: x[1])[1] if latest_image_info else None
+    if latest_image_time:
+        last_modified_jst = latest_image_time + timedelta(hours=9)
+        last_modified_str = last_modified_jst.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        last_modified_str = "更新日時不明"
+
+    st.session_state['location_info'] = [
+        {
+            "name": f"函館駅の{animal}",
+            "location": [41.768793, 140.728810],
+            "day": 1902,
+            "html": f"""
+                <b>函館駅の{animal}</b><br>
+                <i>テスト:</i> {animal}の情報<br>
+                <img src="{image_url}" alt="{alt_text}" width="200"><br>
+                <i>出現日時:</i> {last_modified_str}
+            """
+        },
+        {
+            "name": f"はこだて未来大学の{animal}",
+            "location": [41.841505, 140.766193],
+            "day": 2000,
+            "html": f"""
+                <b>はこだて未来大学の{animal}</b><br>
+                <i>テスト:</i> {animal}の情報<br>
+                <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/{alt_text}.jpg" alt="{alt_text}" width="200">
+            """
+        }
+    ]
+    st.experimental_rerun()
+
+
+# S3からフォルダ内の最新の画像を取得
+def get_latest_image_from_s3(bucket, folder):
+    try:
+        response = s3_client.list_objects_v2(Bucket=bucket, Prefix=folder)
+        images = [(content['Key'], content['LastModified']) for content in response.get('Contents', []) if content['Key'].lower().endswith(('png', 'jpg', 'jpeg', 'gif'))]
+        if not images:
+            return None
+        latest_image = max(images, key=lambda x: x[1])[0]  # 最新の画像
+        return latest_image
+    except Exception as e:
+        st.error(f"S3から最新の画像の取得中にエラーが発生しました: {e}")
+        return None
+
+# S3内の最新の画像のURLを取得
+def get_image_url_from_s3(bucket, image_key):
+    try:
+        url = s3_client.generate_presigned_url('get_object',
+            Params={'Bucket': bucket, 'Key': image_key},
+            ExpiresIn=3600)  # URLの有効期限を1時間に設定
+        return url
+    except Exception as e:
+        st.error(f"画像URLの取得中にエラーが発生しました: {e}")
+        return None
+
+def list_images_in_s3_folder(bucket, folder):
+    try:
+        response = s3_client.list_objects_v2(Bucket=bucket, Prefix=folder)
+        images = [(content['Key'], content['LastModified']) for content in response.get('Contents', []) if content['Key'].lower().endswith(('png', 'jpg', 'jpeg', 'gif'))]
+        if not images:
+            st.error(f"フォルダ '{folder}' には画像が見つかりませんでした。")
+        return images
+    except Exception as e:
+        st.error(f"画像リストの取得中にエラーが発生しました: {e}")
+        return []
+
+
+    
+    # S3から画像を取得
+folder_path = 'camera1/higuma/'
+image_info = list_images_in_s3_folder(bucket_name, folder_path)
 
 # Mapboxのアクセストークンを設定
 mapbox_token = os.getenv("MAPBOX_TOKEN")
@@ -30,15 +128,30 @@ japanese_tiles = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'
 
 # 初期値設定
 if 'initial_info' not in st.session_state:
+    # S3から最新画像を取得
+    latest_image_key = get_latest_image_from_s3(bucket_name, 'camera1/higuma/')
+    image_url = get_image_url_from_s3(bucket_name, latest_image_key) if latest_image_key else ""
+    
+    # 画像の更新日時を取得し、9時間を追加
+    latest_image_info = list_images_in_s3_folder(bucket_name, 'camera1/higuma/')
+    latest_image_time = max(latest_image_info, key=lambda x: x[1])[1] if latest_image_info else None
+    if latest_image_time:
+        # 9時間を追加
+        last_modified_jst = latest_image_time + timedelta(hours=9)
+        last_modified_str = last_modified_jst.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        last_modified_str = "更新日時不明"
+
     st.session_state['initial_info'] = [
         {
-            "name": "函館市役所",
+             "name": "函館市役所",
             "location": [41.768793, 140.728810],
             "day": 2,
-            "html": """
+            "html": f"""
                 <b>函館市役所</b><br>
                 <i>所在地:</i> 北海道函館市<br>
-                <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/kuma.png" alt="函館市役所" width="200">
+                <img src="{image_url}" alt="函館駅" width="200"><br>
+                <i>出現日時:</i> {last_modified_str}
             """
         },
         {
@@ -48,6 +161,8 @@ if 'initial_info' not in st.session_state:
             "html": """
                 <b>はこだて未来大学</b><br>
                 <i>所在地:</i> 北海道函館市<br>
+                <i>day:</i> 2000年<br>
+                <i>学部:</i> システム情報科学部<br>
                 <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/FUN.jpg" alt="はこだて未来大学" width="200">
             """
         }
@@ -62,86 +177,20 @@ cols = st.columns(8)  # より多くの列を作成
 
 with cols[0]:
     if st.button("🐻 クマ", key="bear"):
-        st.session_state['location_info'] = st.session_state['initial_info']
-        st.experimental_rerun()
+        update_location_info('クマ', 'camera1/bear/', 'kuma')
 
 with cols[1]:
     if st.button("🫎 シカ", key="deer"):
-        st.session_state['location_info'] = [
-            {
-                "name": "函館市役所",
-                "location": [41.768793, 140.728810],
-                "day": 1902,
-                "html": """
-                    <b>函館市役所の鹿</b><br>
-                    <i>テスト:</i> 鹿の情報<br>
-                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/shika.jpg" alt="函館市役所" width="200">
-                """
-            },
-            {
-                "name": "はこだて未来大学",
-                "location": [41.841505, 140.766193],
-                "day": 2000,
-                "html": """
-                    <b>はこだて未来大学の鹿</b><br>
-                    <i>テスト:</i> 鹿の情報<br>
-                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/shika.jpg" alt="はこだて未来大学" width="200">
-                """
-            }
-        ]
-        st.experimental_rerun()
+        update_location_info('シカ', 'camera1/deer/', 'shika')
 
 with cols[2]:
     if st.button("🐦‍⬛ カラス", key="crow"):
-        st.session_state['location_info'] = [
-            {
-                "name": "函館市役所",
-                "location": [41.768793, 140.728810],
-                "day": 1902,
-                "html": """
-                    <b>函館市役所のカラス</b><br>
-                    <i>テスト:</i> カラスの情報<br>
-                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/crow.jpg" alt="函館市役所" width="200">
-                """
-            },
-            {
-                "name": "はこだて未来大学",
-                "location": [41.841505, 140.766193],
-                "day": 2000,
-                "html": """
-                    <b>はこだて未来大学のカラス</b><br>
-                    <i>テスト:</i> カラスの情報<br>
-                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/crow.jpg" alt="はこだて未来大学" width="200">
-                """
-            }
-        ]
-        st.experimental_rerun()
+        update_location_info('カラス', 'camera1/crow/', 'crow')
 
 with cols[3]:
     if st.button("🦊 キツネ", key="fox"):
-        st.session_state['location_info'] = [
-            {
-                "name": "函館市役所",
-                "location": [41.768793, 140.728810],
-                "day": 1902,
-                "html": """
-                    <b>函館市役所のキツネ</b><br>
-                    <i>テスト:</i> キツネの情報<br>
-                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/kitune.jpg" alt="函館市役所" width="200">
-                """
-            },
-            {
-                "name": "はこだて未来大学",
-                "location": [41.841505, 140.766193],
-                "day": 2000,
-                "html": """
-                    <b>はこだて未来大学のキツネ</b><br>
-                    <i>テスト:</i> キツネの情報<br>
-                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/kitune.jpg" alt="はこだて未来大学" width="200">
-                """
-            }
-        ]
-        st.experimental_rerun()
+        update_location_info('キツネ', 'camera1/fox/', 'kitune')
+
 
 # Foliumで地図を作成（日本語Mapboxタイルを使用）
 m = folium.Map(
