@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Streamlitのタイトル
-st.title("Folium Map in Streamlit")
+st.title("ヒグマダッシュボード")
 
 # 地図の中心座標とズームレベルを設定
 map_center = [41.768793, 140.728810]  # 函館の座標
