@@ -178,7 +178,7 @@ cols = st.columns(8)  # より多くの列を作成
 
 with cols[0]:
     if st.button("🐻 クマ", key="bear"):
-        update_location_info('クマ', 'camera1/beer/', 'kuma')
+        update_location_info('クマ', 'camera1/bear/', 'kuma')
 
 with cols[1]:
     if st.button("🫎 シカ", key="deer"):
