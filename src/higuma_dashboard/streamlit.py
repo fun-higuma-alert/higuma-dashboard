@@ -26,7 +26,7 @@ zoom_level = 10
 mapbox_token = os.getenv("MAPBOX_TOKEN")
 
 # 日本語のMapboxタイルURL
-japanese_tiles = f'https://api.mapbox.com/styles/v1/mapbox/streets-v11/tiles/{{z}}/{{x}}/{{y}}?access_token={mapbox_token}&language=ja'
+japanese_tiles = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'
 
 # 初期値設定
 if 'initial_info' not in st.session_state:
@@ -202,10 +202,10 @@ def create_color_bar():
     return fig
 
 # レイアウトを調整
-col1, col2 = st.columns([8, 1])  # カラムの比率を調整
+col1, col2 = st.columns([14, 1])  # カラムの比率を調整
 
 with col1:
-    folium_static(m, width=1600, height=1000)
+    folium_static(m, width=1370, height=700)
 with col2:
     fig = create_color_bar()
     st.pyplot(fig)
