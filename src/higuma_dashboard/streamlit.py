@@ -32,16 +32,13 @@ japanese_tiles = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'
 if 'initial_info' not in st.session_state:
     st.session_state['initial_info'] = [
         {
-            "name": "函館駅",
+            "name": "函館市役所",
             "location": [41.768793, 140.728810],
-            "day": 1902,
+            "day": 2,
             "html": """
-                <b>函館駅</b><br>
+                <b>函館市役所</b><br>
                 <i>所在地:</i> 北海道函館市<br>
-                <i>開業:</i> 1902年<br>
-                <i>運営:</i> JR北海道<br>
-                <i>路線:</i> 函館本線<br>
-                <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/kuma.png" alt="函館駅" width="200">
+                <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/kuma.png" alt="函館市役所" width="200">
             """
         },
         {
@@ -51,8 +48,6 @@ if 'initial_info' not in st.session_state:
             "html": """
                 <b>はこだて未来大学</b><br>
                 <i>所在地:</i> 北海道函館市<br>
-                <i>設立:</i> 2000年<br>
-                <i>学部:</i> システム情報科学部<br>
                 <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/FUN.jpg" alt="はこだて未来大学" width="200">
             """
         }
@@ -74,13 +69,13 @@ with cols[1]:
     if st.button("🫎 シカ", key="deer"):
         st.session_state['location_info'] = [
             {
-                "name": "函館駅",
+                "name": "函館市役所",
                 "location": [41.768793, 140.728810],
                 "day": 1902,
                 "html": """
-                    <b>函館駅の鹿</b><br>
+                    <b>函館市役所の鹿</b><br>
                     <i>テスト:</i> 鹿の情報<br>
-                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/shika.jpg" alt="函館駅" width="200">
+                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/shika.jpg" alt="函館市役所" width="200">
                 """
             },
             {
@@ -100,13 +95,13 @@ with cols[2]:
     if st.button("🐦‍⬛ カラス", key="crow"):
         st.session_state['location_info'] = [
             {
-                "name": "函館駅",
+                "name": "函館市役所",
                 "location": [41.768793, 140.728810],
                 "day": 1902,
                 "html": """
-                    <b>函館駅のカラス</b><br>
+                    <b>函館市役所のカラス</b><br>
                     <i>テスト:</i> カラスの情報<br>
-                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/crow.jpg" alt="函館駅" width="200">
+                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/crow.jpg" alt="函館市役所" width="200">
                 """
             },
             {
@@ -126,13 +121,13 @@ with cols[3]:
     if st.button("🦊 キツネ", key="fox"):
         st.session_state['location_info'] = [
             {
-                "name": "函館駅",
+                "name": "函館市役所",
                 "location": [41.768793, 140.728810],
                 "day": 1902,
                 "html": """
-                    <b>函館駅のキツネ</b><br>
+                    <b>函館市役所のキツネ</b><br>
                     <i>テスト:</i> キツネの情報<br>
-                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/kitune.jpg" alt="函館駅" width="200">
+                    <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/kitune.jpg" alt="函館市役所" width="200">
                 """
             },
             {
@@ -165,7 +160,7 @@ folium.TileLayer(
 
 # カラーバーで使用する色と対応する設立年の範囲を定義
 colors = ["#ffa07a", "#ff6347", "#ff0000"]
-day_ranges = [(1, 5), (6, 10), (11, 30)]
+day_ranges = [(11, 30), (6, 10), (1, 5)]
 
 # 年に基づいて色を決定する関数
 def get_color_by_day(danger_day):
