@@ -57,7 +57,7 @@ def update_location_info(animal, folder_path, alt_text):
         {
             "name": f"函館駅の{animal}",
             "location": [41.768793, 140.728810],
-            "established": 1902,
+            "day": 1902,
             "html": f"""
                 <b>函館駅の{animal}</b><br>
                 <i>テスト:</i> {animal}の情報<br>
@@ -68,7 +68,7 @@ def update_location_info(animal, folder_path, alt_text):
         {
             "name": f"はこだて未来大学の{animal}",
             "location": [41.841505, 140.766193],
-            "established": 2000,
+            "day": 2000,
             "html": f"""
                 <b>はこだて未来大学の{animal}</b><br>
                 <i>テスト:</i> {animal}の情報<br>
@@ -147,7 +147,7 @@ if 'initial_info' not in st.session_state:
              "name": "函館市役所",
             "location": [41.768793, 140.728810],
             "day": 2,
-            "html": """
+            "html": f"""
                 <b>函館市役所</b><br>
                 <i>所在地:</i> 北海道函館市<br>
                 <img src="{image_url}" alt="函館駅" width="200"><br>
@@ -157,7 +157,7 @@ if 'initial_info' not in st.session_state:
         {
             "name": "はこだて未来大学",
             "location": [41.841505, 140.766193],
-            "established": 2000,
+            "day": 2000,
             "html": """
                 <b>はこだて未来大学</b><br>
                 <i>所在地:</i> 北海道函館市<br>
