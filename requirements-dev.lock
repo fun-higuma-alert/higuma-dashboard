@@ -16,6 +16,11 @@ attrs==23.2.0
     # via referencing
 blinker==1.8.2
     # via streamlit
+boto3==1.35.12
+    # via higuma-dashboard
+botocore==1.35.12
+    # via boto3
+    # via s3transfer
 branca==0.7.2
     # via folium
     # via higuma-dashboard
@@ -51,6 +56,9 @@ jinja2==3.1.4
     # via folium
     # via pydeck
     # via streamlit-folium
+jmespath==1.0.1
+    # via boto3
+    # via botocore
 jsonschema==4.22.0
     # via altair
 jsonschema-specifications==2023.12.1
@@ -96,6 +104,7 @@ pygments==2.18.0
 pyparsing==3.1.2
     # via matplotlib
 python-dateutil==2.9.0.post0
+    # via botocore
     # via matplotlib
     # via pandas
 python-dotenv==1.0.1
@@ -113,6 +122,8 @@ rich==13.7.1
 rpds-py==0.18.1
     # via jsonschema
     # via referencing
+s3transfer==0.10.2
+    # via boto3
 six==1.16.0
     # via python-dateutil
 smmap==5.0.1
@@ -136,6 +147,7 @@ typing-extensions==4.12.2
 tzdata==2024.1
     # via pandas
 urllib3==2.2.2
+    # via botocore
     # via requests
 watchdog==4.0.1
     # via streamlit
