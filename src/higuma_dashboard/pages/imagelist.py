@@ -15,79 +15,132 @@ s3 = boto3.client(
     aws_access_key_id=aws_access_key_id,
     aws_secret_access_key=aws_secret_access_key
 )
-bucket_name = 'higuma-detected-images'
 
-# 初期フォルダ設定
-folder_name = 'camera1/bear'  # デフォルトはクマのフォルダ
-
-# タイトルの設定
-st.title("過去の検出画像")
-
-# ページの初期状態をセッションステートに保存
+# セッション状態が無い場合に初期化
 if 'page' not in st.session_state:
     st.session_state.page = 'home'
 
-# ページ遷移のための関数
 def go_to_page(page_name):
+    """ページを変更"""
     st.session_state.page = page_name
+    # ボタンを押すたびにページ状態をリセット
+    st.session_state.page_index = 0
+    if 'data' in st.session_state:
+        del st.session_state['data']  # 以前のデータをクリア
 
-# タブの設定
+# タブの作成
 nanae, fun = st.tabs(["七飯町", "はこだて未来大学"])
 
-# 七飯町タブの内容
 with nanae:
     st.header("七飯で検出された獣類")
-    if st.button("七飯のクマ"):
-        go_to_page('nanae_bear')
-    if st.button("七飯のシカ"):
-        go_to_page('nanae_deer')
+    # 8列のカラムを作成し、最初の2つにボタンを配置
+    cols = st.columns(6)
+    with cols[0]:
+        if st.button("七飯のクマ"):
+            go_to_page('nanae_bear')
+    with cols[1]:
+        if st.button("七飯のシカ"):
+            go_to_page('nanae_dear')
+    with cols[2]:
+        if st.button("七飯のカラス"):
+            go_to_page('nanae_crow')
+    with cols[3]:
+        if st.button("七飯のキツネ"):
+            go_to_page('nanae_fox')
 
 with fun:
     st.header("未来大で検出された獣類")
-    if st.button("未来大のクマ"):
-        go_to_page('fun_bear')
-    if st.button("未来大のシカ"):
-        go_to_page('fun_dear')
+    # 8列のカラムを作成し、最初の2つにボタンを配置
+    cols = st.columns(6)
+    with cols[0]:
+        if st.button("未来大のクマ"):
+            go_to_page('fun_bear')
+    with cols[1]:
+        if st.button("未来大のシカ"):
+            go_to_page('fun_dear')
+    with cols[2]:
+        if st.button("未来大のカラス"):
+            go_to_page('fun_crow')
+    with cols[3]:
+        if st.button("未来大のキツネ"):
+            go_to_page('fun_fox')
 
 
-# 参照するフォルダを動的に設定
-if st.session_state.page == 'nanae_bear':
-    folder_name = 'camera1/bear'  # 七飯のクマフォルダ
-    st.write("七飯のクマ一覧")
-elif st.session_state.page == 'nanae_deer':
-    folder_name = 'camera1/deer'  # 七飯のシカフォルダ
-    st.write("七飯のシカ一覧")
-elif st.session_state.page == 'fun_bear':
-    folder_name = 'camera1/crow'  # 七飯のシカフォルダ
-    st.write("未来大のクマ一覧")
-elif st.session_state.page == 'fun_dear':
-    folder_name = 'camera1/fox'  # 七飯のシカフォルダ
-    st.write("未来大のシカ一覧")
+# フォルダ名を動的に設定
+def get_folder_name():
+    """現在のページに基づき、フォルダ名を返す"""
+    if st.session_state.page == 'nanae_bear':
+        return 'camera1/bear'
+    elif st.session_state.page == 'nanae_dear':
+        return 'camera1/deer'
+    elif st.session_state.page == 'nanae_crow':
+        return 'camera1/crow'
+    elif st.session_state.page == 'nanae_fox':
+        return 'camera1/fox'
+    elif st.session_state.page == 'fun_bear':
+        return 'camera2/bear'
+    elif st.session_state.page == 'fun_dear':
+        return 'camera2/deer'
+    elif st.session_state.page == 'fun_crow':
+        return 'camera2/crow'
+    elif st.session_state.page == 'fun_fox':
+        return 'camera2/fox'
+    else:
+        return None
 
-# S3から画像を取得する関数
 def get_images_from_s3():
     """S3から画像のリストを取得"""
-    response = s3.list_objects_v2(Bucket=bucket_name, Prefix=folder_name)
+    folder_name = get_folder_name()
+
+    if folder_name is None or st.session_state.page == 'home':
+        st.warning("フォルダが設定されていません")
+        return []
+
+    response = s3.list_objects_v2(Bucket='higuma-detected-images', Prefix=folder_name)
+
+    if 'Contents' not in response:
+        st.warning(f"{folder_name}内に画像が見つかりませんでした")
+        return []
+
     image_list = []
-    
-    for obj in response.get('Contents', []):
+    for obj in response['Contents']:
         key = obj['Key']
-        if key.endswith('.jpg') or key.endswith('.png') or key.endswith('.jpeg'):
+        if key.endswith('.jpg') or key.endswith('.png') or key.endswith('.jpeg') or key.endswith('.webp'):
             image_list.append(key)
+    
+    if not image_list:
+        st.warning(f"{folder_name}内に画像ファイルがありません")
     
     return image_list
 
-# セッションステートの取得
-ss = st.session_state
+def display_images():
+    """10行,6列で画像の表示"""
+    if "data" not in st.session_state:
+        st.session_state["data"] = get_data()  # 初めて画像を取得する
 
-#### セッション管理 ####
+    if st.session_state["page_index"] >= len(st.session_state["data"]):
+        st.warning("ページインデックスが範囲外です")
+        return
+    
+    # ページごとのデータを取得
+    for data_per_page in st.session_state["data"][st.session_state["page_index"]]:
+        cols = st.columns(6)
+        for col_index, col_ph in enumerate(cols):
+            if col_index < len(data_per_page):
+                img_key = data_per_page[col_index]
+                try:
+                    img_obj = s3.get_object(Bucket='higuma-detected-images', Key=img_key)
+                    img_bytes = img_obj['Body'].read()
+                    img = Image.open(BytesIO(img_bytes))
+                    col_ph.image(img, use_column_width=True)
+                except Exception as e:
+                    col_ph.warning(f"画像の読み込みに失敗しました: {e}")
+
+# ページネーションに必要なデータ
 def init_session_state():
     """セッションステートの初期化"""
-    if "data" not in ss:
-        ss["data"] = get_data()
-  
-    if "page_index" not in ss:
-        ss["page_index"] = 0
+    if "page_index" not in st.session_state:
+        st.session_state.page_index = 0
 
 #### アプリケーションロジック ####
 def get_data():
@@ -117,44 +170,23 @@ def get_data():
 def update_index(session_key, num, max_val=None):
     """ページネーションのインデックスを更新"""
     if max_val:
-        if 0 <= ss[session_key] + num < max_val:  # max_valの範囲内か確認
-            ss[session_key] += num
+        if st.session_state[session_key] < max_val - num:
+            st.session_state[session_key] += num
     else:
-        if ss[session_key] >= num:
-            ss[session_key] -= num
-
-#### 画面描画 ####
-def display_images():
-    """10行,6列で画像の表示"""
-    if ss["page_index"] >= len(ss["data"]):
-        st.warning("ページインデックスが範囲外です")
-        return  # これ以上のページがない場合は表示を行わない
-    
-    for data_per_page in ss["data"][ss["page_index"]]:
-        cols = st.columns(6)  # 6列で表示する
-        for col_index, col_ph in enumerate(cols):
-            if col_index < len(data_per_page):  # data_per_pageの長さを超えないようにチェック
-                img_key = data_per_page[col_index]
-                img_obj = s3.get_object(Bucket=bucket_name, Key=img_key)
-                img_bytes = img_obj['Body'].read()
-                img = Image.open(BytesIO(img_bytes))
-                col_ph.image(img)
+        if st.session_state[session_key] >= num:
+            st.session_state[session_key] -= num
 
 def pagination():
     """ページネーションボタンの表示"""
     col1, col2, col3 = st.columns([1, 8, 1])
 
-    max_pages = len(ss["data"])
-
-    if col1.button("前へ"):
-        update_index("page_index", -1, max_pages)
-    if col3.button("次へ"):
-        update_index("page_index", 1, max_pages)
+    col1.button("前へ" * 1, on_click=update_index, args=("page_index", 1))
+    col3.button("次へ" * 1, on_click=update_index, args=("page_index", 1, len(st.session_state["data"])))
 
     col2.markdown(
         f"""
         <div style='text-align: center;'>
-            ページ {ss["page_index"] + 1} / {max_pages}
+            {st.session_state["page_index"] + 1} / {len(st.session_state["data"])}
         </div>
         """,
         unsafe_allow_html=True,
@@ -168,7 +200,8 @@ def main():
     pagination()
 
 # ページネーションを有効化して実行
-main()
+if st.session_state.page != 'home':
+    main()
 
 # サイドバーの表示
 admin_sidebar()
