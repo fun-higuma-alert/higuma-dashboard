@@ -70,11 +70,11 @@ def update_location_info(animal, folder_path, alt_text):
     # st.session_state にカメラ1とカメラ2の画像情報を格納
     st.session_state['location_info'] = [
         {
-            "name": f"函館駅の{animal}",
-            "location": [41.768793, 140.728810],
+            "name": f"大沼ネイチャーセンターの{animal}",
+            "location": [41.982099, 140.669183],
             "day": 1902,
             "html": f"""
-                <b>函館駅の{animal}</b><br>
+                <b>大沼ネイチャーセンターの{animal}</b><br>
                 <i>テスト:</i> {animal}の情報<br>
                 <img src="{image_url_camera1}" alt="{alt_text}" width="200"><br>
                 <i>出現日時:</i> {last_modified_str_camera1}
