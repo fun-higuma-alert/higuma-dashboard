@@ -127,50 +127,8 @@ mapbox_token = os.getenv("MAPBOX_TOKEN")
 japanese_tiles = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'
 
 # 初期値設定
-if 'initial_info' not in st.session_state:
-    # S3から最新画像を取得
-    latest_image_key = get_latest_image_from_s3(bucket_name, 'camera1/higuma/')
-    image_url = get_image_url_from_s3(bucket_name, latest_image_key) if latest_image_key else ""
-    
-    # 画像の更新日時を取得し、9時間を追加
-    latest_image_info = list_images_in_s3_folder(bucket_name, 'camera1/higuma/')
-    latest_image_time = max(latest_image_info, key=lambda x: x[1])[1] if latest_image_info else None
-    if latest_image_time:
-        # 9時間を追加
-        last_modified_jst = latest_image_time + timedelta(hours=9)
-        last_modified_str = last_modified_jst.strftime("%Y-%m-%d %H:%M:%S")
-    else:
-        last_modified_str = "更新日時不明"
-
-    st.session_state['initial_info'] = [
-        {
-             "name": "函館市役所",
-            "location": [41.768793, 140.728810],
-            "day": 2,
-            "html": f"""
-                <b>函館市役所</b><br>
-                <i>所在地:</i> 北海道函館市<br>
-                <img src="{image_url}" alt="函館駅" width="200"><br>
-                <i>出現日時:</i> {last_modified_str}
-            """
-        },
-        {
-            "name": "はこだて未来大学",
-            "location": [41.841505, 140.766193],
-            "day": 2000,
-            "html": """
-                <b>はこだて未来大学</b><br>
-                <i>所在地:</i> 北海道函館市<br>
-                <i>day:</i> 2000年<br>
-                <i>学部:</i> システム情報科学部<br>
-                <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/FUN.jpg" alt="はこだて未来大学" width="200">
-            """
-        }
-    ]
-
-# 現在の表示情報を初期値に設定
 if 'location_info' not in st.session_state:
-    st.session_state['location_info'] = st.session_state['initial_info']
+    update_location_info('クマ', 'camera1/bear/', 'kuma')
 
 # ボタン間の空白を減らす
 cols = st.columns(8)  # より多くの列を作成
