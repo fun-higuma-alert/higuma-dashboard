@@ -39,20 +39,35 @@ s3_client = boto3.client(
     aws_secret_access_key=aws_secret_access_key,
 )
 
-# 動物に応じてS3フォルダを参照する処理を共通化
 def update_location_info(animal, folder_path, alt_text):
-    latest_image_key = get_latest_image_from_s3(bucket_name, folder_path)
-    image_url = get_image_url_from_s3(bucket_name, latest_image_key) if latest_image_key else ""
+    # camera1 と camera2 を動的に参照する
+    latest_image_key_camera1 = get_latest_image_from_s3(bucket_name, f'camera1/{folder_path}')
+    image_url_camera1 = get_image_url_from_s3(bucket_name, latest_image_key_camera1) if latest_image_key_camera1 else ""
+
+    latest_image_key_camera2 = get_latest_image_from_s3(bucket_name, f'camera2/{folder_path}')
+    image_url_camera2 = get_image_url_from_s3(bucket_name, latest_image_key_camera2) if latest_image_key_camera2 else ""
 
     # 画像の更新日時を取得し、9時間を追加
-    latest_image_info = list_images_in_s3_folder(bucket_name, folder_path)
-    latest_image_time = max(latest_image_info, key=lambda x: x[1])[1] if latest_image_info else None
-    if latest_image_time:
-        last_modified_jst = latest_image_time + timedelta(hours=9)
-        last_modified_str = last_modified_jst.strftime("%Y-%m-%d %H:%M:%S")
-    else:
-        last_modified_str = "更新日時不明"
+    latest_image_info_camera1 = list_images_in_s3_folder(bucket_name, f'camera1/{folder_path}')
+    latest_image_time_camera1 = max(latest_image_info_camera1, key=lambda x: x[1])[1] if latest_image_info_camera1 else None
 
+    latest_image_info_camera2 = list_images_in_s3_folder(bucket_name, f'camera2/{folder_path}')
+    latest_image_time_camera2 = max(latest_image_info_camera2, key=lambda x: x[1])[1] if latest_image_info_camera2 else None
+
+    # 日本時間に合わせて9時間追加
+    if latest_image_time_camera1:
+        last_modified_jst_camera1 = latest_image_time_camera1 + timedelta(hours=9)
+        last_modified_str_camera1 = last_modified_jst_camera1.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        last_modified_str_camera1 = "更新日時不明"
+
+    if latest_image_time_camera2:
+        last_modified_jst_camera2 = latest_image_time_camera2 + timedelta(hours=9)
+        last_modified_str_camera2 = last_modified_jst_camera2.strftime("%Y-%m-%d %H:%M:%S")
+    else:
+        last_modified_str_camera2 = "更新日時不明"
+
+    # st.session_state にカメラ1とカメラ2の画像情報を格納
     st.session_state['location_info'] = [
         {
             "name": f"函館駅の{animal}",
@@ -61,8 +76,8 @@ def update_location_info(animal, folder_path, alt_text):
             "html": f"""
                 <b>函館駅の{animal}</b><br>
                 <i>テスト:</i> {animal}の情報<br>
-                <img src="{image_url}" alt="{alt_text}" width="200"><br>
-                <i>出現日時:</i> {last_modified_str}
+                <img src="{image_url_camera1}" alt="{alt_text}" width="200"><br>
+                <i>出現日時:</i> {last_modified_str_camera1}
             """
         },
         {
@@ -72,18 +87,19 @@ def update_location_info(animal, folder_path, alt_text):
             "html": f"""
                 <b>はこだて未来大学の{animal}</b><br>
                 <i>テスト:</i> {animal}の情報<br>
-                <img src="https://test-image-higuma.s3.ap-northeast-1.amazonaws.com/{alt_text}.jpg" alt="{alt_text}" width="200">
+                <img src="{image_url_camera2}" alt="{alt_text}" width="200"><br>
+                <i>出現日時:</i> {last_modified_str_camera2}
             """
         }
     ]
-    st.experimental_rerun()
+    st.rerun()
 
 
 # S3からフォルダ内の最新の画像を取得
 def get_latest_image_from_s3(bucket, folder):
     try:
         response = s3_client.list_objects_v2(Bucket=bucket, Prefix=folder)
-        images = [(content['Key'], content['LastModified']) for content in response.get('Contents', []) if content['Key'].lower().endswith(('png', 'jpg', 'jpeg', 'gif'))]
+        images = [(content['Key'], content['LastModified']) for content in response.get('Contents', []) if content['Key'].lower().endswith(('png', 'jpg', 'jpeg', 'gif', 'webp'))]
         if not images:
             return None
         latest_image = max(images, key=lambda x: x[1])[0]  # 最新の画像
@@ -106,7 +122,7 @@ def get_image_url_from_s3(bucket, image_key):
 def list_images_in_s3_folder(bucket, folder):
     try:
         response = s3_client.list_objects_v2(Bucket=bucket, Prefix=folder)
-        images = [(content['Key'], content['LastModified']) for content in response.get('Contents', []) if content['Key'].lower().endswith(('png', 'jpg', 'jpeg', 'gif'))]
+        images = [(content['Key'], content['LastModified']) for content in response.get('Contents', []) if content['Key'].lower().endswith(('png', 'jpg', 'jpeg', 'gif', 'webp'))]
         if not images:
             st.error(f"フォルダ '{folder}' には画像が見つかりませんでした。")
         return images
@@ -128,26 +144,26 @@ japanese_tiles = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'
 
 # 初期値設定
 if 'location_info' not in st.session_state:
-    update_location_info('クマ', 'camera1/bear/', 'kuma')
+    update_location_info('クマ', 'bear/', 'kuma')
 
 # ボタン間の空白を減らす
 cols = st.columns(8)  # より多くの列を作成
 
 with cols[0]:
     if st.button("🐻 クマ", key="bear"):
-        update_location_info('クマ', 'camera1/bear/', 'kuma')
+        update_location_info('クマ', 'bear/', 'kuma')
 
 with cols[1]:
     if st.button("🫎 シカ", key="deer"):
-        update_location_info('シカ', 'camera1/deer/', 'shika')
+        update_location_info('シカ', 'deer/', 'shika')
 
 with cols[2]:
     if st.button("🐦‍⬛ カラス", key="crow"):
-        update_location_info('カラス', 'camera1/crow/', 'crow')
+        update_location_info('カラス', 'crow/', 'crow')
 
 with cols[3]:
     if st.button("🦊 キツネ", key="fox"):
-        update_location_info('キツネ', 'camera1/fox/', 'kitune')
+        update_location_info('キツネ', 'fox/', 'kitune')
 
 
 # Foliumで地図を作成（日本語Mapboxタイルを使用）
