@@ -12,6 +12,7 @@ from PIL import Image
 import base64
 from dotenv import load_dotenv
 from datetime import timedelta
+from datetime import datetime
 
 # ページ設定
 st.set_page_config(layout="wide")
@@ -67,7 +68,7 @@ def update_location_info(animal, folder_path, alt_text):
     else:
         last_modified_str_camera2 = "更新日時不明"
 
-    # st.session_state にカメラ1とカメラ2の画像情報を格納
+    # st.session_state にカメラ1とカメラ2の画像情報を格納し、"last_modified" キーを追加
     st.session_state['location_info'] = [
         {
             "name": f"大沼ネイチャーセンターの{animal}",
@@ -78,7 +79,8 @@ def update_location_info(animal, folder_path, alt_text):
                 <i>テスト:</i> {animal}の情報<br>
                 <img src="{image_url_camera1}" alt="{alt_text}" width="200"><br>
                 <i>出現日時:</i> {last_modified_str_camera1}
-            """
+            """,
+            "last_modified": last_modified_str_camera1  # camera1の更新日時をキーに渡す
         },
         {
             "name": f"はこだて未来大学の{animal}",
@@ -89,7 +91,8 @@ def update_location_info(animal, folder_path, alt_text):
                 <i>テスト:</i> {animal}の情報<br>
                 <img src="{image_url_camera2}" alt="{alt_text}" width="200"><br>
                 <i>出現日時:</i> {last_modified_str_camera2}
-            """
+            """,
+            "last_modified": last_modified_str_camera2  # camera2の更新日時をキーに渡す
         }
     ]
     st.rerun()
@@ -183,18 +186,26 @@ folium.TileLayer(
 
 # カラーバーで使用する色と対応する設立年の範囲を定義
 colors = ["#ffa07a", "#ff6347", "#ff0000"]
-day_ranges = [(11, 30), (6, 10), (1, 5)]
+day_ranges = [(11, 30), (6, 10), (0, 5)]
 
-# 年に基づいて色を決定する関数
-def get_color_by_day(danger_day):
+# 出現日に基づいて色を決定する関数 (更新日時との比較)
+def get_color_by_day(last_modified_str):
+    if last_modified_str == "更新日時不明":
+        return "#ffffff"  # デフォルトの色（範囲外の場合）
+
+    # 現在時刻と更新日時の差分を計算
+    last_modified_time = datetime.strptime(last_modified_str, "%Y-%m-%d %H:%M:%S")
+    now = datetime.now()
+    day_diff = (now - last_modified_time).days
+
     for color, (start_day, end_day) in zip(colors, day_ranges):
-        if start_day <= danger_day <= end_day:
+        if start_day <= day_diff <= end_day:
             return color
     return "#ffffff"  # デフォルトの色（範囲外の場合）
 
 # 各マーカーを追加
 for loc in st.session_state['location_info']:
-    color = get_color_by_day(loc["day"])
+    color = get_color_by_day(loc["last_modified"])
     folium.CircleMarker(
         location=loc["location"],
         radius=10,  # 円の半径
