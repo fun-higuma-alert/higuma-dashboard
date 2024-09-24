@@ -134,11 +134,6 @@ def list_images_in_s3_folder(bucket, folder):
         return []
 
 
-    
-    # S3から画像を取得
-folder_path = 'camera1/higuma/'
-image_info = list_images_in_s3_folder(bucket_name, folder_path)
-
 # Mapboxのアクセストークンを設定
 mapbox_token = os.getenv("MAPBOX_TOKEN")
 
